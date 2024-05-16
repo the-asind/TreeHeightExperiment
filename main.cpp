@@ -1,81 +1,97 @@
-#include <utility>
 #include <iostream>
-#include <tuple>  // Add this line
+#include <cstdlib>
+#include <ctime>
 
+class TreapNode {
+public:
+    int key, priority;
+    TreapNode *left, *right;
 
-#include "RBST.cpp"
-
-
-
-struct Sum {
-    using T = int;
-    using E = int;
-
-    static T dt() { return 0; }
-    static E de() { return 0; }
-    static T f(T a, T b, T c) { return a + b + c; }
-    static T g(T a, E b, int len) { return a + b * len; }
-    static E h(E a, E b) { return a + b; }
+    TreapNode(int _key) : key(_key), priority(rand()), left(nullptr), right(nullptr) {}
 };
 
-void test1(){
-    RBST<Sum> tree;
-    RBST<Sum>::node* root = nullptr;
+class Treap {
+private:
+    TreapNode* root;
 
-    // Insert elements
-    for (int i = 1; i <= 10; ++i) {
-        tree.insert(root, i - 1, i);
+    TreapNode* rotateLeft(TreapNode* node) {
+        TreapNode* rightChild = node->right;
+        node->right = rightChild->left;
+        rightChild->left = node;
+        return rightChild;
     }
 
-    // Print the tree
-    std::cout << "Tree: ";
-    tree.debug(root);
-    std::cout << std::endl;
-
-    // Query sum of elements in range [2, 7)
-    std::cout << "Sum of elements in range [2, 7): " << tree.query(root, 2, 7) << std::endl;
-
-    // Update elements in range [3, 6) with value 2
-    tree.update(root, 3, 6, 2);
-
-    // Print the updated tree
-    std::cout << "Updated tree: ";
-    tree.debug(root);
-    std::cout << std::endl;
-
-    // Query sum of elements in range [2, 7) after update
-    std::cout << "Sum of elements in range [2, 7) after update: " << tree.query(root, 2, 7) << std::endl;
-
-    // Erase element at position 4
-    tree.erase(root, 4);
-
-    // Print the tree after erasure
-    std::cout << "Tree after erasure: ";
-    tree.debug(root);
-    std::cout << std::endl;
-}
-
-void test2(){
-    RBST<Sum> tree;
-    RBST<Sum>::node* root = nullptr;
-
-    // Insert elements
-    for (int i = 1; i <= 4; ++i) {
-        tree.insert(root, i - 1, i);
+    TreapNode* rotateRight(TreapNode* node) {
+        TreapNode* leftChild = node->left;
+        node->left = leftChild->right;
+        leftChild->right = node;
+        return leftChild;
     }
 
-    // Print the tree
-    std::cout << "Tree: ";
-    tree.debug(root);
-    std::cout << std::endl;
-    tree.update(root, 1, 4, 2);
-    // Print the updated tree
-    std::cout << "Updated tree: ";
-    tree.debug(root);
-    std::cout << std::endl;
+    TreapNode* insert(TreapNode* node, int key) {
+        if (!node) return new TreapNode(key);
+
+        if (key < node->key) {
+            node->left = insert(node->left, key);
+            if (node->left->priority > node->priority)
+                node = rotateRight(node);
+        } else {
+            node->right = insert(node->right, key);
+            if (node->right->priority > node->priority)
+                node = rotateLeft(node);
+        }
+        return node;
+    }
+
+    void inorder(TreapNode* node) {
+        if (!node) return;
+        inorder(node->left);
+        std::cout << node->key << " ";
+        inorder(node->right);
+    }
+
+public:
+    Treap() : root(nullptr) {}
+
+    void insert(int key) {
+        root = insert(root, key);
+    }
+
+    void display() {
+        inorder(root);
+        std::cout << std::endl;
+    }
+
+    int height(TreapNode* node) {
+        if (!node) return 0;
+        return 1 + std::max(height(node->left), height(node->right));
+    }
+
+    int getHeight() {
+        return height(root);
+    }
+};
+
+// Функция для тестирования высоты дерева от количества элементов
+void testTreeHeight(int numElements) {
+    Treap treap;
+    srand(time(nullptr));
+
+    for (int i = 0; i < numElements; ++i) {
+        treap.insert(rand() % 100);
+    }
+
+    std::cout << "Height of Treap with " << numElements << " elements: " << treap.getHeight() << std::endl;
 }
 
 int main() {
-    test2();
+    testTreeHeight(1);
+    testTreeHeight(3);
+    testTreeHeight(7);
+    testTreeHeight(10); // Пример: тест с 10 элементами
+    testTreeHeight(100);
+    testTreeHeight(1000);
+    testTreeHeight(10000);
+    testTreeHeight(100000);
     return 0;
 }
